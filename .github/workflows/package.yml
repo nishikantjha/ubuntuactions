@@ -1,0 +1,25 @@
+name: Build and Push Package
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build_and_push:
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      
+    - name: Set up JDK
+      uses: actions/setup-java@v2
+      with:
+        java-version: '11'
+      
+    - name: Build package
+      run: ./gradlew build
+      
+    - name: Publish package
+      run: ./gradlew publish
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  
