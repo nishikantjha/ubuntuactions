@@ -9,6 +9,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+        with:
+          ref: main
+        runs:
+          node-version: '16.x'
       
       - name: Setup Node.js
         uses: actions/setup-node@v2
@@ -43,4 +47,3 @@ jobs:
               package_file: `${{ github.event.repository.name }}_${{ github.run_number }}.deb`,
             })
             console.log(`Published package ${data.package.name} with version ${data.package.version}`)
-
