@@ -1,25 +1,45 @@
-name: Build and Push Package
+name: Build and Publish Package
 on:
   push:
-    branches:
-      - main
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      package:
+        description: 'The name of the package to build and publish'
+        required: true
+
 jobs:
-  build_and_push:
+  build:
     runs-on: ubuntu-22.04
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
-      
-    - name: Set up JDK
-      uses: actions/setup-java@v2
-      with:
-        java-version: '11'
-      
-    - name: Build package
-      run: ./gradlew build
-      
+    - name: Install dependencies
+      run: sudo apt-get update && sudo apt-get install -y build-essential git
+    - name: Configure package
+      run: ./configure
+    - name: Make package
+      run: make package PACKAGE=${{ github.event.inputs.package }}
     - name: Publish package
-      run: ./gradlew publish
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ github.event.inputs.package }}-package
+        path: ./${{ github.event.inputs.package }}-*.deb
+  publish:
+    runs-on: ubuntu-22.04
+    needs: build
+    steps:
+    - name: Download package
+      uses: actions/download-artifact@v2
+      with:
+        name: ${{ github.event.inputs.package }}-package
+    - name: Publish to GitHub Packages
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        push: true
+        tags: ghcr.io/${{ github.repository }}/${{ github.event.inputs.package }}:latest
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
   
