@@ -7,12 +7,14 @@ jobs:
   build-and-publish:
     runs-on: ubuntu-22.04
     steps:
-      - name: Checkout code
+      - name: Checkout code and setup Node.js 16.x
         uses: actions/checkout@v2
         with:
           ref: main
-          shell: bash -l '-c'
-          run: echo "Setup Node.js 16.x" && nvm install 16.x && nvm use 16.x
+      run: |
+        echo "Setup Node.js 16.x"
+        nvm install 16.x
+        nvm use 16.x
       
       - name: Install dependencies
         run: |
