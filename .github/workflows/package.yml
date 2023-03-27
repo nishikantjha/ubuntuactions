@@ -6,7 +6,7 @@ on:
       - main
 
 env:
-  PACKAGE_NAME: ${{ github.event.inputs.package_name }}
+  PACKAGE_NAME: vlc
 
 jobs:
   build-and-publish:
