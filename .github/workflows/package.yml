@@ -1,16 +1,13 @@
 name: Build and Publish Apt Package
-
 on:
   push:
     branches:
       - main
-
-env:
-  PACKAGE_NAME: vlc
-
 jobs:
   build-and-publish:
     runs-on: ubuntu-22.04
+    env:
+      PACKAGE_NAME: ${{ github.event.inputs.package_name }}
     steps:
       - name: Checkout code and setup Node.js 16.x
         uses: actions/checkout@v2
@@ -24,20 +21,20 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update && sudo apt-get install -y build-essential dh-make devscripts fakeroot
-          mkdir -p ${PACKAGE_NAME}-1.0
-          cd ${PACKAGE_NAME}-1.0 && DEBIAN_FRONTEND=noninteractive dh_make -p ${PACKAGE_NAME}_1.0 --createorig
+          mkdir -p mypackage-1.0
+          cd mypackage-1.0 && DEBIAN_FRONTEND=noninteractive dh_make -p $PACKAGE_NAME_1.0 --createorig
           cd ..
-          echo "${PACKAGE_NAME} (1.0) UNRELEASED; urgency=medium\n\n  * Initial release\n\n -- Your Name <yourname@yourdomain.com>  $(date -R)" > ${PACKAGE_NAME}-1.0/debian/changelog
+          echo "$PACKAGE_NAME (1.0) UNRELEASED; urgency=medium\n\n  * Initial release\n\n -- Your Name <yourname@yourdomain.com>  $(date -R)" > mypackage-1.0/debian/changelog
       - name: Build package
         run: |
-          cd ${PACKAGE_NAME}-1.0
+          cd mypackage-1.0
           dpkg-buildpackage -uc -us
           cd ..
       - name: Publish package
         uses: actions/upload-artifact@v2
         with:
           name: ${{ github.event.repository.name }}_${{ github.run_number }}
-          path: '${PACKAGE_NAME}-1.0/*.deb'
+          path: 'mypackage-1.0/*.deb'
       - name: Publish to Github Packages
         uses: actions/github-script@v4
         with:
@@ -50,5 +47,3 @@ jobs:
               package_file: `${{ github.event.repository.name }}_${{ github.run_number }}.deb`,
             })
             console.log(`Published package ${data.package.name} with version ${data.package.version}`)
-        env:
-          PACKAGE_NAME: ${{ env.PACKAGE_NAME }}
