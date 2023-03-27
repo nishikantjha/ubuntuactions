@@ -21,20 +21,22 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update && sudo apt-get install -y build-essential dh-make devscripts fakeroot
-          mkdir -p debian
-          cd debian && dh_make --createorig
+          mkdir -p mypackage-1.0
+          cd mypackage-1.0 && dh_make -p mypackage_1.0 --createorig
           cd ..
-          echo "mypackage (1.0) UNRELEASED; urgency=medium\n\n  * Initial release\n\n -- Your Name <yourname@yourdomain.com>  $(date -R)" > debian/changelog
+          echo "mypackage (1.0) UNRELEASED; urgency=medium\n\n  * Initial release\n\n -- Your Name <yourname@yourdomain.com>  $(date -R)" > mypackage-1.0/debian/changelog
       
       - name: Build package
         run: |
+          cd mypackage-1.0
           dpkg-buildpackage -uc -us
+          cd ..
       
       - name: Publish package
         uses: actions/upload-artifact@v2
         with:
           name: ${{ github.event.repository.name }}_${{ github.run_number }}
-          path: '*.deb'
+          path: 'mypackage-1.0/*.deb'
           
       - name: Publish to Github Packages
         uses: actions/github-script@v4
