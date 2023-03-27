@@ -19,7 +19,14 @@ jobs:
     - name: Create packages directory
       run: |
         mkdir packages
-      
+        
+    - name: Create debian/changelog file
+      run: |
+        mkdir -p ${{ env.PACKAGE_DIR }}/debian
+        touch ${{ env.PACKAGE_DIR }}/debian/changelog
+      env:
+        PACKAGE_DIR: "packages"
+    
     - name: Build package
       run: |
         cd ${{ env.PACKAGE_DIR }}
