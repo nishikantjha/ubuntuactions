@@ -8,13 +8,10 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout code and setup Node.js 16.x
-        uses: actions/checkout@v3
-        with:
-          ref: main
-          node-version: '16.x'
+        uses: actions/checkout@v2
       
       - name: Setup Node.js 16.x
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v2
         with:
           node-version: '16.x'
       
@@ -43,6 +40,7 @@ jobs:
         env:
           PACKAGE_NAME: ${{ github.event.inputs.package_name }}
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const { data } = await github.packages.publishPackage({
               package_type: 'deb',
