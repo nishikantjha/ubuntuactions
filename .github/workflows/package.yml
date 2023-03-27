@@ -9,38 +9,35 @@ jobs:
     steps:
       - name: Checkout code and setup Node.js 16.x
         uses: actions/checkout@v2
-      
+        with:
+          ref: main
+          submodules: 'recursive'
       - name: Setup Node.js 16.x
         uses: actions/setup-node@v2
         with:
           node-version: '16.x'
-      
       - name: Install dependencies
         run: |
           sudo apt-get update && sudo apt-get install -y build-essential dh-make devscripts fakeroot
           mkdir -p mypackage-1.0
-          cd mypackage-1.0 && dh_make -p mypackage_1.0 --createorig
+          cd mypackage-1.0 && DEBIAN_FRONTEND=noninteractive dh_make -p mypackage_1.0 --createorig
           cd ..
           echo "mypackage (1.0) UNRELEASED; urgency=medium\n\n  * Initial release\n\n -- Your Name <yourname@yourdomain.com>  $(date -R)" > mypackage-1.0/debian/changelog
-      
       - name: Build package
         run: |
           cd mypackage-1.0
           dpkg-buildpackage -uc -us
           cd ..
-      
       - name: Publish package
         uses: actions/upload-artifact@v2
         with:
           name: ${{ github.event.repository.name }}_${{ github.run_number }}
           path: 'mypackage-1.0/*.deb'
-          
       - name: Publish to Github Packages
         uses: actions/github-script@v4
         env:
           PACKAGE_NAME: ${{ github.event.inputs.package_name }}
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const { data } = await github.packages.publishPackage({
               package_type: 'deb',
