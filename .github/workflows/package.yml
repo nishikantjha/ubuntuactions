@@ -1,24 +1,34 @@
-name: Build and publish package
+name: Build and Package
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
 jobs:
-  build:
+  build-and-package:
     runs-on: ubuntu-latest
-    env:
+    env: 
       PACKAGE_NAME: vlc
     steps:
-    - name: Checkout code
+    - name: Checkout repository
       uses: actions/checkout@v2
-    - name: Install build dependencies
-      run: sudo apt-get install -y build-essential debhelper devscripts
+      
+    - name: Set up environment
+      run: |
+        sudo apt-get -y update
+        sudo apt-get -y install build-essential devscripts debhelper dh-make
+        
+    - name: Create packages directory
+      run: |
+        mkdir packages
+      
     - name: Build package
       run: |
-        cd debian
+        cd ${{ env.PACKAGE_DIR }}
         debuild -us -uc
-    - name: Publish package
+      env:
+        PACKAGE_DIR: "packages"
+        
+    - name: Save package
       uses: actions/upload-artifact@v2
       with:
         name: ${{ env.PACKAGE_NAME }}
-        path: ../${{ env.PACKAGE_NAME }}*.deb
+        path: ${{ env.PACKAGE_DIR }}/*.deb
