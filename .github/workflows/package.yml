@@ -20,7 +20,7 @@ jobs:
 
       - name: Build package
         run: |
-          cd ${{ github.workspace }}
+          cd ${{ github.workspace }}/${{ env.PACKAGE_NAME }}
           debuild -uc -us
 
       - name: Save package to GitHub repository
