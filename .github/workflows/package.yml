@@ -1,49 +1,28 @@
-name: Build and Publish Apt Package
+name: Build and Package
+
 on:
   push:
     branches:
       - main
+
 jobs:
-  build-and-publish:
-    runs-on: ubuntu-22.04
-    env:
-      PACKAGE_NAME: ${{ github.event.inputs.package_name }}
+  build-and-package:
+    runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code and setup Node.js 16.x
+      - name: Checkout code
         uses: actions/checkout@v2
-        with:
-          ref: main
-          submodules: 'recursive'
-      - name: Setup Node.js 16.x
-        uses: actions/setup-node@v2
-        with:
-          node-version: '16.x'
-      - name: Install dependencies
-        run: |
-          sudo apt-get update && sudo apt-get install -y build-essential dh-make devscripts fakeroot
-          mkdir -p mypackage-1.0
-          cd mypackage-1.0 && DEBIAN_FRONTEND=noninteractive dh_make -p $PACKAGE_NAME_1.0 --createorig
-          cd ..
-          echo "$PACKAGE_NAME (1.0) UNRELEASED; urgency=medium\n\n  * Initial release\n\n -- Your Name <yourname@yourdomain.com>  $(date -R)" > mypackage-1.0/debian/changelog
+
+      - name: Set up apt dependencies
+        run: sudo apt-get update && sudo apt-get install -y build-essential debhelper devscripts
+
       - name: Build package
         run: |
-          cd mypackage-1.0
-          dpkg-buildpackage -uc -us
-          cd ..
-      - name: Publish package
+          cd ${{ github.workspace }}
+          debuild -uc -us
+
+      - name: Save package to GitHub repository
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ github.event.repository.name }}_${{ github.run_number }}
-          path: 'mypackage-1.0/*.deb'
-      - name: Publish to Github Packages
-        uses: actions/github-script@v4
-        with:
-          script: |
-            const { data } = await github.packages.publishPackage({
-              package_type: 'deb',
-              name: process.env.PACKAGE_NAME,
-              version: '${{ github.run_number }}',
-              release_type: 'stable',
-              package_file: `${{ github.event.repository.name }}_${{ github.run_number }}.deb`,
-            })
-            console.log(`Published package ${data.package.name} with version ${data.package.version}`)
+          name: ${{ env.PACKAGE_NAME }}
+          path: ${{ github.workspace }}/${{ env.PACKAGE_NAME }}.deb
